@@ -15,7 +15,7 @@ import tempfile
 import itertools
 import json
 
-VALID_PROTOCOLS = ['git', 'ssh', 'http', 'https', 'ssh-colon', 'file']
+VALID_PROTOCOLS = ['git', 'ssh', 'http', 'https', 'ssh-colon', 'file', 'relative']
 VERSION = '0.1.0'
 
 parser = argparse.ArgumentParser(
@@ -70,7 +70,8 @@ be searched recursively for mentioned files.
   Print the contents of all the files that would have been modified.
 
 The resulting URI must be specified with hostname, username and protocol. All
-of these can be overridden by the command line.
+of these can be overridden by the command line. When using the protocol
+'relative' the hostname may be of the form '../..' and username is ignored.
 
 TIP: Before changing .gitmodules files, it might be a good idea to run %(prog)s
 --list-config --modules-only to get a list of the modified projects. This can
@@ -156,6 +157,11 @@ def replace(gitConfigFile, subst, host, proto, username = None, dryRun = False):
                         host = host,
                         path = newName
                         )
+                elif proto == 'relative':
+                    uri = '{host}/{path}'.format(
+                            host = host,
+                            path = newName
+                            )
                 else:
                     uri = '{proto}://{user}{host}/{path}'.format(
                         proto = proto,

@@ -210,7 +210,8 @@ def validateJSONConfig(json):
 
     try:
         re.compile(json['search']['hostname'])
-        re.compile(json['search']['path'])
+        if 'path' in json['search']:
+            re.compile(json['search']['path'])
     except re.error as e:
         print('Config contains invalid regex "{}": {}'.format(e.pattern, e.msg), file = sys.stderr)
 
@@ -222,21 +223,33 @@ if __name__ == '__main__':
 
     validateJSONConfig(json)
 
-    regex = re.compile("""
-    ^(?P<key>\s*url\s*=\s*)
-    (?:
-    # Either an URI:
-      (?:(file|ssh|git|http|https)://)?         # protocol, optional
-      (?:[a-z_][a-z0-9_-]*[$]?@)??              # Linux username, followed by '@', optional
-      (?:{hosts})                               # Accepted hostnames
-      :?(?:{paths})                             # Common paths
-    | # or a relative path
-      \.\.)
-    /+(?P<project>[^\.\n]+)                     # project name
-    (?:\.git)??                                 # optionally followed by ".git"
-    \s*$""".format(
-        hosts = json['search']['hostname'],
-        paths = json['search']['path']), re.MULTILINE | re.VERBOSE)
+    if 'path' in json['search']:
+        # TODO: relative path is way to simplified:
+        regex = re.compile("""
+        ^(?P<key>\s*url\s*=\s*)
+        (?:
+        # Either an URI:
+          (?:(file|ssh|git|http|https)://)?         # protocol, optional
+          (?:[a-z_][a-z0-9_-]*[$]?@)??              # Linux username, followed by '@', optional
+          (?:{hosts})                               # Accepted hostnames
+          :?(?:{paths})                             # Common paths
+        | # or a relative path
+          \.\.)
+        /+(?P<project>[^\.\n]+)                     # project name
+        (?:\.git)??                                 # optionally followed by ".git"
+        \s*$""".format(
+            hosts = json['search']['hostname'],
+            paths = json['search']['path']), re.MULTILINE | re.VERBOSE)
+    else:
+        regex = re.compile("""
+        ^(?P<key>\s*url\s*=\s*)
+        (?:(file|ssh|git|http|https)://)?           # protocol, optional
+        (?:[a-z_][a-z0-9_-]*[$]?@)??                # Linux username, followed by '@', optional
+        (?:{hosts})                                 # Accepted hostnames
+        :?
+        (?P<project>[^\.\n]+)                       # project path/name
+        (?:\.git)??                                 # optionally followed by ".git"
+        \s*$""".format(hosts = json['search']['hostname']), re.MULTILINE | re.VERBOSE)
 
     for target in args.targets:
         if os.path.isdir(target):

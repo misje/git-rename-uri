@@ -16,7 +16,7 @@ import itertools
 import json
 
 VALID_PROTOCOLS = ['git', 'ssh', 'http', 'https', 'ssh-colon', 'file', 'relative']
-VERSION = '0.1.0'
+VERSION = '0.2.0'
 
 parser = argparse.ArgumentParser(
         description = 'Recursively search directory for .git/config files and update all remote URIs',
